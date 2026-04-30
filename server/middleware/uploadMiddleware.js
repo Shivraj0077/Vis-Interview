@@ -1,12 +1,27 @@
 const multer = require('multer');
 const path = require('path');
+const { S3Client } = require('@aws-sdk/client-s3');
+const multerS3 = require('multer-s3');
 
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, 'uploads/');
+// Configure S3 Client
+const s3 = new S3Client({
+    region: process.env.AWS_REGION || 'us-east-1',
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
-    filename(req, file, cb) {
-        cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+});
+
+const storage = multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET,
+    acl: undefined,
+    metadata: function (req, file, cb) {
+        cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+        const fileName = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
+        cb(null, `uploads/${fileName}`);
     },
 });
 

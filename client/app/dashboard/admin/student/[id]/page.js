@@ -142,31 +142,7 @@ export default function StudentDetailPage({ params }) {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Documents Analysis */}
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="space-y-4">
-                            <div className="flex items-center justify-between px-2">
-                                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                                    <FileText className="h-4 w-4" />
-                                    Verified Repository ({documents.length})
-                                </h3>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {documents.map(doc => (
-                                    <div key={doc._id} className="minimal-card p-5 bg-white flex items-center justify-between group">
-                                        <div className="space-y-0.5">
-                                            <p className="font-bold text-foreground text-sm">{doc.type}</p>
-                                            <p className="text-[10px] text-muted-foreground font-mono uppercase">OCR_VERIFIED</p>
-                                        </div>
-                                        <a
-                                            href={`http://localhost:5000/${doc.filePath}`}
-                                            target="_blank"
-                                            className="h-9 w-9 flex items-center justify-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-foreground hover:text-background transition-all border border-border/50 group-hover:scale-105"
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
+
 
                         <section className="space-y-4">
                             <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2 px-2">

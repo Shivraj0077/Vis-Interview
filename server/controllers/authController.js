@@ -46,6 +46,29 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
+    // 1. Static Officer Login Check
+    if (email === 'officer@eduverify.com' && password === 'officer@pass123') {
+        // Find or create the static officer in DB for consistency
+        let officer = await User.findOne({ email: 'officer@eduverify.com' });
+        if (!officer) {
+            officer = await User.create({
+                name: 'Chief Officer',
+                email: 'officer@eduverify.com',
+                password: 'officer@pass123', // Will be hashed but we check plain text above
+                role: 'admin'
+            });
+        }
+        
+        return res.json({
+            _id: officer._id,
+            name: officer.name,
+            email: officer.email,
+            role: officer.role,
+            token: generateToken(officer._id),
+        });
+    }
+
+    // 2. Dynamic Student/User Login
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {

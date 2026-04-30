@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2, Mail, Lock } from 'lucide-react';
+import api from '../../lib/api';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -17,32 +18,22 @@ export default function LoginPage() {
         setIsLoading(true);
         setError('');
 
-        // Mock login — simulate a brief delay then redirect
-        await new Promise((r) => setTimeout(r, 800));
+        try {
+            const { data } = await api.post('/auth/login', { email, password });
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data));
 
-        if (!email || !password) {
-            setError('Please enter both email and password.');
+            if (data.role === 'admin') {
+                router.push('/dashboard/admin');
+            } else {
+                router.push('/dashboard/student');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
+        } finally {
             setIsLoading(false);
-            return;
         }
-
-        // Store mock user data
-        const mockUser = {
-            name: email.split('@')[0],
-            email: email,
-            role: email.includes('admin') ? 'admin' : 'student',
-            token: 'mock-jwt-token-' + Date.now(),
-        };
-
-        localStorage.setItem('token', mockUser.token);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-
-        if (mockUser.role === 'admin') {
-            router.push('/dashboard/admin');
-        } else {
-            router.push('/dashboard/student');
-        }
-        setIsLoading(false);
     };
 
     return (

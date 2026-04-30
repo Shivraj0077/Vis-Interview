@@ -1,13 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
 
-// Load env vars
+// Load env vars immediately
 dotenv.config();
 
-// Connect to database
+const connectDB = require('./config/db');
+const { connectRedis } = require('./config/redis');
+
+// Connect to databases
 connectDB();
+connectRedis();
 
 const app = express();
 
@@ -20,6 +23,7 @@ app.use('/uploads', express.static('uploads')); // Serve uploaded files
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/resources', require('./routes/resourceRoutes'));
 
 const PORT = process.env.PORT || 5000;
 

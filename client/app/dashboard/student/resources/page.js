@@ -10,7 +10,6 @@ import {
     Compass,
     LogOut,
     Briefcase,
-    Scale,
     HeartHandshake,
     MapPin,
     ExternalLink,
@@ -26,7 +25,6 @@ import {
 
 const TABS = [
     { id: 'jobs', label: 'Jobs & Opportunities', icon: Briefcase },
-    { id: 'lawyers', label: 'Immigration Lawyers', icon: Scale },
     { id: 'ngos', label: 'NGOs & Support', icon: HeartHandshake },
 ];
 
@@ -99,52 +97,6 @@ const MOCK_JOBS = [
     },
 ];
 
-const MOCK_LAWYERS = [
-    {
-        name: 'Sarah Mitchell & Associates',
-        specialization: 'Student & Work Visas',
-        location: 'New York, NY',
-        rating: 4.9,
-        reviews: 234,
-        price: '$200 - $350/hr',
-        languages: ['English', 'Spanish'],
-        description: 'Specializing in F-1 to H-1B transitions, OPT/CPT applications, and student visa renewals.',
-        availableSlots: 'Mon-Fri, 9AM-6PM EST',
-    },
-    {
-        name: 'Patel Immigration Law',
-        specialization: 'H-1B & Green Card',
-        location: 'San Jose, CA',
-        rating: 4.8,
-        reviews: 189,
-        price: '$180 - $300/hr',
-        languages: ['English', 'Hindi', 'Gujarati'],
-        description: 'Expert in visa sponsorship, green card processing, and immigration compliance for tech workers.',
-        availableSlots: 'Mon-Sat, 8AM-7PM PST',
-    },
-    {
-        name: 'Zhang & Partners',
-        specialization: 'Student Visa Defense',
-        location: 'Los Angeles, CA',
-        rating: 4.7,
-        reviews: 156,
-        price: '$220 - $400/hr',
-        languages: ['English', 'Mandarin', 'Cantonese'],
-        description: 'Handling visa denials, appeals, and complex immigration cases for international students.',
-        availableSlots: 'Tue-Sat, 10AM-6PM PST',
-    },
-    {
-        name: 'Global Visas LLP',
-        specialization: 'Multi-Country Immigration',
-        location: 'Chicago, IL',
-        rating: 4.6,
-        reviews: 112,
-        price: '$150 - $280/hr',
-        languages: ['English', 'French', 'Arabic'],
-        description: 'Cross-border immigration services covering USA, Canada, UK, and Australia.',
-        availableSlots: 'Mon-Fri, 9AM-5PM CST',
-    },
-];
 
 const MOCK_NGOS = [
     {
@@ -203,7 +155,7 @@ export default function ResourcesPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-white flex">
+        <div className="h-screen overflow-hidden bg-white flex">
             {/* Sidebar */}
             <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex">
                 <div className="flex items-center gap-3 mb-10 px-2">
@@ -348,68 +300,6 @@ export default function ResourcesPage() {
                         </motion.div>
                     )}
 
-                    {/* ════════ LAWYERS TAB ════════ */}
-                    {activeTab === 'lawyers' && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-                        >
-                            {MOCK_LAWYERS.filter((l) =>
-                                !searchQuery || l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.specialization.toLowerCase().includes(searchQuery.toLowerCase())
-                            ).map((lawyer, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.08 }}
-                                    className="minimal-card p-6 bg-white hover:shadow-lg transition-all"
-                                >
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
-                                            <Scale className="h-6 w-6 text-blue-700" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold text-foreground">{lawyer.name}</h3>
-                                            <p className="text-sm text-muted-foreground font-medium">{lawyer.specialization}</p>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-sm text-muted-foreground mb-4">{lawyer.description}</p>
-
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                            <span className="font-bold text-foreground">{lawyer.rating}</span>
-                                            <span className="text-muted-foreground">({lawyer.reviews})</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <DollarSign className="h-4 w-4" />
-                                            {lawyer.price}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <MapPin className="h-4 w-4" />
-                                            {lawyer.location}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Globe className="h-4 w-4" />
-                                            {lawyer.languages.join(', ')}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                            <Clock className="h-3.5 w-3.5" />
-                                            {lawyer.availableSlots}
-                                        </span>
-                                        <button className="btn-primary h-9 px-4 text-xs">
-                                            Book Consultation
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
 
                     {/* ════════ NGOs TAB ════════ */}
                     {activeTab === 'ngos' && (

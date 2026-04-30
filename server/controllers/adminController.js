@@ -9,7 +9,7 @@ const User = require('../models/User');
 // @route   GET /api/admin/students
 // @access  Private/Admin
 const getStudents = asyncHandler(async (req, res) => {
-    const students = await Student.find({}).populate('user', 'name email');
+    const students = await Student.find({}).sort({ finalScore: -1 }).populate('user', 'name email');
     res.json(students);
 });
 

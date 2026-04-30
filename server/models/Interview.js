@@ -8,12 +8,8 @@ const interviewSchema = new mongoose.Schema({
         answerAudioPath: String,
         answerText: String,
     }],
-    geminiAnalysis: {
-        credibilityScore: { type: Number },
-        academicIntentScore: { type: Number },
-        financialUnderstandingScore: { type: Number },
-        explanation: { type: String }
-    },
+    currentPhase: { type: Number, default: 1 }, // 1 to 5
+    geminiAnalysis: { type: Object }, // Higher fidelity storage for evaluation
     status: { type: String, enum: ['Pending', 'Completed'], default: 'Pending' }
 }, { timestamps: true });
 

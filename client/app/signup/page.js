@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2, User, Mail, Lock, Shield } from 'lucide-react';
+import api from '../../lib/api';
 
 export default function SignupPage() {
     const [name, setName] = useState('');
@@ -19,31 +20,22 @@ export default function SignupPage() {
         setIsLoading(true);
         setError('');
 
-        // Mock signup — simulate a brief delay then redirect
-        await new Promise((r) => setTimeout(r, 800));
+        try {
+            const { data } = await api.post('/auth/register', { name, email, password, role });
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data));
 
-        if (!name || !email || !password) {
-            setError('Please fill in all fields.');
+            if (data.role === 'admin') {
+                router.push('/dashboard/admin');
+            } else {
+                router.push('/dashboard/student');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+        } finally {
             setIsLoading(false);
-            return;
         }
-
-        const mockUser = {
-            name,
-            email,
-            role,
-            token: 'mock-jwt-token-' + Date.now(),
-        };
-
-        localStorage.setItem('token', mockUser.token);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-
-        if (role === 'admin') {
-            router.push('/dashboard/admin');
-        } else {
-            router.push('/dashboard/student');
-        }
-        setIsLoading(false);
     };
 
     return (

@@ -141,7 +141,7 @@ export default function InterviewPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex">
+        <div className="h-screen overflow-hidden bg-white flex">
             {/* Sidebar */}
             <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex">
                 <div className="flex items-center gap-3 mb-10 px-2">

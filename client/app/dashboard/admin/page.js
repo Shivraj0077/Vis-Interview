@@ -49,13 +49,15 @@ export default function AdminDashboard() {
         { name: 'System Settings', href: '/dashboard/admin/settings', icon: Settings },
     ];
 
-    const filteredStudents = students.filter(s =>
-        s.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.passportNumber?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredStudents = students
+        .filter(s =>
+            s.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.passportNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
 
     return (
-        <div className="min-h-screen bg-[#FDFDFF] flex">
+        <div className="h-screen overflow-hidden bg-[#FDFDFF] flex">
             {/* Sidebar */}
             <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex fixed h-full">
                 <div className="flex items-center gap-3 mb-10 px-2">
