@@ -1,9 +1,15 @@
-const { GoogleGenAI } = require("@google/genai");
 const { client: redis } = require('../config/redis');
 
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
-});
+let aiInstance = null;
+async function getAI() {
+    if (!aiInstance) {
+        const { GoogleGenAI } = await import("@google/genai");
+        aiInstance = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
+    }
+    return aiInstance;
+}
 
 const generateNextQuestion = async (student, interview, docs) => {
     try {
@@ -66,6 +72,7 @@ const generateNextQuestion = async (student, interview, docs) => {
             return JSON.parse(cachedQ);
         }
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt

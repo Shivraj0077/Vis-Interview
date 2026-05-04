@@ -1,12 +1,17 @@
-const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
 const axios = require("axios");
 const FormData = require("form-data");
 
-// Initialize Google GenAI with the new Flash 3 Preview model
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
-});
+let aiInstance = null;
+async function getAI() {
+    if (!aiInstance) {
+        const { GoogleGenAI } = await import("@google/genai");
+        aiInstance = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
+    }
+    return aiInstance;
+}
 
 /**
  * Transcribe audio using ElevenLabs Scribe API (External STT Provider)
@@ -52,6 +57,7 @@ const transcribeAudioWithGemini = async (fileContentOrPath) => {
             fileContent = fs.readFileSync(fileContentOrPath);
         }
 
+        const ai = await getAI();
         const result = await ai.models.generateContent({
             model: "gemini-1.5-flash", // Use 1.5 flash for audio
             contents: [
@@ -105,6 +111,7 @@ const analyzeTranscript = async (transcript) => {
       }
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
@@ -152,6 +159,7 @@ const analyzeSingleAnswer = async (question, answer) => {
       }
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
@@ -191,6 +199,7 @@ const parseDocument = async (rawText, docType) => {
       Return ONLY valid JSON.
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
@@ -227,6 +236,7 @@ const analyzeNewsHit = async (name, title, snippet) => {
       }
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
@@ -258,6 +268,7 @@ const generateFinalRecommendations = async (student, docs) => {
       Return a JSON array of strings (recommendations).
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
@@ -310,6 +321,7 @@ const analyzeHolistically = async (student, docs) => {
       }
     `;
 
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt
