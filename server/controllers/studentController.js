@@ -197,24 +197,25 @@ const submitAnswer = asyncHandler(async (req, res) => {
         interview.currentPhase += 1;
     }
 
-    // If Phase 5 and answered, complete
-    if (interview.currentPhase === 5 && interview.questions.length >= 6) {
+    // Complete the interview if it's the 4th question (index 3) to match frontend length
+    if (parseInt(questionIndex, 10) >= 3 || interview.questions.length >= 4) {
         interview.status = 'Completed';
         const fullTranscript = interview.questions.map(q => `Q: ${q.question}\nA: ${q.answerText}`).join('\n\n');
         interview.transcript = fullTranscript;
         
+        // Generate the final multidimensional analysis report
+        interview.geminiAnalysis = await analyzeTranscript(fullTranscript);
+
         // Final score calculation
         const docApproveCount = await Document.countDocuments({ student: student._id, isValid: true });
         const docScore = (docApproveCount / 6) * 30; // Max 30
-        const backgroundScore = student.backgroundScore; // Max 25 (0 to 25)
+        const backgroundScore = student.backgroundScore || 0; // Max 25 (0 to 25)
         
-        // Average interview scores
-        const avgSpec = interview.questions.reduce((acc, q) => acc + (q.evaluation?.specificity || 5), 0) / interview.questions.length;
-        const avgCons = interview.questions.reduce((acc, q) => acc + (q.evaluation?.consistency || 5), 0) / interview.questions.length;
+        // Use the new geminiAnalysis credibility score to map to 45 points max
+        const interviewScoreTotal = interview.geminiAnalysis ? 
+            (interview.geminiAnalysis.overallCredibilityScore / 100) * 45 : 35;
         
-        const interviewScoreTotal = (avgSpec * 2) + (avgCons * 2) + 5; // Simplified map to 45 points range
-        
-        student.finalScore = docScore + backgroundScore + interviewScoreTotal;
+        student.finalScore = Math.round(docScore + backgroundScore + interviewScoreTotal);
         student.riskLevel = determineRiskLevel(student.finalScore);
         
         // Final AI recommendations
@@ -223,6 +224,8 @@ const submitAnswer = asyncHandler(async (req, res) => {
         await student.save();
     }
 
+    // Mark modified so mongoose saves the mixed object properly
+    interview.markModified('geminiAnalysis');
     await interview.save();
     res.json({
         message: 'Answer processed successfully',
