@@ -99,7 +99,7 @@ const uploadDocument = asyncHandler(async (req, res) => {
         const { text, confidence } = await extractTextFromImage(file.location);
         ocrConfidence = confidence;
         extractedData = await parseDocument(text, type);
-        validationFlags = validateDocumentLogic(extractedData, type);
+        validationFlags = await validateDocumentLogic(extractedData, type);
         
         if (confidence < 60) {
             validationFlags.push("Low OCR Confidence: Possible document tampering or poor scan quality.");

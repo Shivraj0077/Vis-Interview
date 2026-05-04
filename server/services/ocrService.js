@@ -1,7 +1,5 @@
 const tesseract = require('tesseract.js');
 const { parseDocument } = require('./geminiService');
-const mrz = require('mrz');
-
 const extractTextFromImage = async (filePath) => {
     try {
         const { data: { text, confidence } } = await tesseract.recognize(filePath, 'eng');
@@ -15,11 +13,13 @@ const extractTextFromImage = async (filePath) => {
 /**
  * Validates the document specific logic (Checksums, dates, etc.)
  */
-const validateDocumentLogic = (data, type) => {
+const validateDocumentLogic = async (data, type) => {
     const flags = [];
     
     if (type === 'Passport' && data.mrzLine) {
         try {
+            const mrzLib = await import('mrz');
+            const mrz = mrzLib.default || mrzLib;
             // Very simple MRZ check for demo
             const result = mrz.parse(data.mrzLine.split('\n'));
             if (!result.valid) {
