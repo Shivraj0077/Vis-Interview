@@ -227,7 +227,9 @@ const submitAnswer = asyncHandler(async (req, res) => {
     res.json({
         message: 'Answer processed successfully',
         nextQuestion: interview.status !== 'Completed' ? await generateNextQuestion(student, interview, docs) : null,
-        isCompleted: interview.status === 'Completed'
+        isCompleted: interview.status === 'Completed',
+        answerText: finalAnswerText,
+        singleAnalysis: analysisResult.evaluation
     });
 });
 
