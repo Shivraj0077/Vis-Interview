@@ -33,7 +33,7 @@ const transcribeAudio = async (filePath) => {
 
         // Fallback to ElevenLabs Scribe
         const formData = new FormData();
-        formData.append('file', fileContent, { filename: 'audio.wav' });
+        formData.append('file', fileContent, { filename: 'audio.webm' });
         formData.append('model_id', 'scribe_v1');
 
         const response = await axios.post('https://api.elevenlabs.io/v1/speech-to-text', formData, {
@@ -63,7 +63,7 @@ const transcribeAudioWithGemini = async (fileContentOrPath) => {
             contents: [
                 {
                     inlineData: {
-                        mimeType: "audio/wav",
+                        mimeType: "audio/webm",
                         data: fileContent.toString("base64")
                     }
                 },
