@@ -169,10 +169,10 @@ const submitAnswer = asyncHandler(async (req, res) => {
     }
 
     // Analyze this specific answer for immediate feedback
-    const interview = await Interview.findOne({ student: student._id });
+    let interview = await Interview.findOne({ student: student._id });
     if (!interview) {
-        res.status(404);
-        throw new Error('Interview not started');
+        // Auto-start interview if it doesn't exist to prevent 404 errors
+        interview = await Interview.create({ student: student._id, questions: [], currentPhase: 1 });
     }
 
     const docs = await Document.find({ student: student._id });
