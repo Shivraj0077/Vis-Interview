@@ -14,13 +14,19 @@ import {
     Square,
     CheckCircle2,
     RefreshCcw,
-    ArrowRight,
     ChevronRight,
-    Keyboard,
     Loader2,
-    ShieldCheck,
-    AlertCircle
+    ShieldCheck
 } from 'lucide-react';
+
+const NoiseFilter = () => (
+  <svg className="pointer-events-none fixed isolate z-50 opacity-[0.02] mix-blend-soft-light w-full h-full">
+    <filter id="noiseFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+  </svg>
+);
 
 const QUESTIONS = [
     "Why do you want to study in the United States?",
@@ -141,82 +147,105 @@ export default function InterviewPage() {
     }
 
     return (
-        <div className="h-screen overflow-hidden bg-white flex">
-            {/* Sidebar */}
-            <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex">
-                <div className="flex items-center gap-3 mb-10 px-2">
-                    <div className="h-10 w-10 rounded-xl bg-foreground flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">E</span>
-                    </div>
-                    <span className="text-xl font-extrabold tracking-tight text-foreground">EduVerify</span>
-                </div>
+        <div className="h-screen overflow-hidden bg-[#02040A] text-white flex font-sans selection:bg-blue-500/30">
+            <NoiseFilter />
 
-                <nav className="flex-1 space-y-1">
+            {/* ════════════ BACKGROUND (FIXED) ════════════ */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div
+                    className="absolute inset-0 bg-cover bg-right bg-no-repeat opacity-40"
+                    style={{ backgroundImage: "url('/ascii-art.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
+                <div className="absolute inset-0 bg-[#206199]/20" />
+                <div
+                    className="absolute inset-0 opacity-[0.08]"
+                    style={{
+                        backgroundImage: "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+                        backgroundSize: "64px 64px",
+                    }}
+                />
+            </div>
+
+            {/* Sidebar */}
+            <aside className="w-80 bg-black/60 border-r border-white/5 p-10 flex flex-col hidden lg:flex z-10 relative backdrop-blur-xl">
+                <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+                
+                <Link href="/" className="flex items-center gap-4 mb-16 px-2 hover:opacity-80 transition-opacity">
+                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                        <span className="text-black font-bold text-xl tracking-tighter">V</span>
+                    </div>
+                    <span className="text-2xl font-light tracking-tighter text-white">VisaAI</span>
+                </Link>
+
+                <nav className="flex-1 space-y-3">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-foreground text-white shadow-md'
-                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                className={`flex items-center gap-4 py-4 px-6 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
+                                    ? 'bg-white text-black shadow-[0_20px_50px_rgba(0,0,0,0.3)]'
+                                    : 'text-white/60 hover:text-blue-200 hover:bg-white/5 font-medium'
                                     }`}
                             >
-                                <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'}`} />
-                                <span className="font-semibold">{item.name}</span>
+                                {isActive && <motion.div layoutId="navGlow" className="absolute left-0 w-1 h-6 bg-blue-500 rounded-full" />}
+                                <item.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? 'text-black' : 'text-white/50 group-hover:text-blue-200'}`} />
+                                <span className="text-base font-medium tracking-wide">{item.name}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto">
+                <div className="mt-auto pt-10 border-t border-white/5">
                     <button
                         onClick={() => { localStorage.clear(); router.push('/login'); }}
-                        className="flex items-center gap-3 py-3 px-4 w-full rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
+                        className="flex items-center gap-4 py-4 px-6 w-full rounded-2xl text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all duration-300 font-mono text-xs font-bold uppercase tracking-widest"
                     >
                         <LogOut className="h-5 w-5" />
-                        <span className="font-semibold">Logout</span>
+                        <span>Terminate</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-6 md:p-10 lg:p-14 overflow-y-auto">
+            <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto z-10 relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="max-w-4xl mx-auto"
+                    className="max-w-5xl mx-auto"
                 >
-                    <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-8">
                         <div>
-                            <h1 className="text-4xl font-extrabold text-foreground mb-2">AI Credibility Interview</h1>
-                            <p className="text-muted-foreground">Answer the following questions naturally for verification.</p>
+                            <div className="text-xs font-mono font-bold text-blue-400 uppercase tracking-[0.3em] mb-2">Aural Verification</div>
+                            <h1 className="text-5xl font-light tracking-tighter text-white mb-2 italic font-serif leading-none">Simulation</h1>
+                            <p className="text-white/80 text-xl font-light tracking-tight leading-relaxed">Neural analysis engaged // Subject: Respond to the prompt</p>
                         </div>
                         {!completed && (
-                            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-full border border-border">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Question</span>
-                                <span className="text-sm font-black text-foreground">{currentQuestionIndex + 1} / {QUESTIONS.length}</span>
+                            <div className="flex flex-col items-end">
+                                <p className="text-xs font-mono font-bold text-white/50 uppercase tracking-[0.3em] mb-2">Sequence Tracker</p>
+                                <div className="h-12 px-6 rounded-2xl bg-white/5 border border-white/10 inline-flex items-center justify-center w-fit">
+                                    <span className="text-xl font-light text-white tracking-tighter">{currentQuestionIndex + 1} <span className="text-white/10 mx-2">/</span> {QUESTIONS.length}</span>
+                                </div>
                             </div>
                         )}
                     </header>
 
                     {!completed ? (
-                        <div className="space-y-8">
+                        <div className="space-y-12">
                             <motion.div
                                 key={currentQuestionIndex}
                                 initial={{ opacity: 0, scale: 0.98 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="minimal-card p-10 md:p-14 bg-white relative overflow-hidden text-center"
+                                className="p-12 md:p-16 bg-white rounded-[40px] shadow-[0_32px_100px_rgba(0,0,0,0.4)] relative overflow-hidden text-center group"
                             >
-                                {/* Subtle Background Icon */}
-                                <div className="absolute -top-10 -right-10 opacity-[0.03] pointer-events-none">
-                                    <Mic2 className="h-64 w-64" />
-                                </div>
+                                <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-blue-400/10 via-blue-500/30 to-blue-400/10" />
+                                <Mic2 className="absolute -top-10 -right-10 h-80 w-80 opacity-[0.02] text-black pointer-events-none" />
 
-                                <div className="max-w-2xl mx-auto">
-                                    <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-12 leading-tight">
-                                        {QUESTIONS[currentQuestionIndex]}
+                                <div className="max-w-3xl mx-auto relative z-10">
+                                    <h2 className="text-3xl md:text-5xl font-light tracking-tighter text-slate-900 mb-12 leading-[1.1] italic font-serif">
+                                        "{QUESTIONS[currentQuestionIndex]}"
                                     </h2>
 
                                     <AnimatePresence mode="wait">
@@ -225,43 +254,42 @@ export default function InterviewPage() {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -20 }}
-                                                className="space-y-10"
+                                                className="space-y-16"
                                             >
                                                 {!manualInput ? (
-                                                    <div className="flex flex-col items-center gap-8">
-                                                        <div className={`relative h-48 w-48 rounded-full flex items-center justify-center transition-all duration-500 bg-muted/30 border border-border shadow-inner ${recording ? 'scale-110 border-red-200' : ''}`}>
+                                                    <div className="flex flex-col items-center gap-16">
+                                                        <div className={`relative h-64 w-64 rounded-full flex items-center justify-center transition-all duration-700 ${recording ? 'bg-blue-50 scale-110' : 'bg-slate-50'}`}>
                                                             {recording && (
                                                                 <motion.div
-                                                                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+                                                                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.1, 0.6] }}
                                                                     transition={{ repeat: Infinity, duration: 2 }}
-                                                                    className="absolute inset-0 rounded-full border-4 border-red-500"
+                                                                    className="absolute inset-0 rounded-full border-2 border-blue-200"
                                                                 />
                                                             )}
-                                                            <div className={`h-32 w-32 rounded-full flex items-center justify-center bg-white shadow-xl transition-all duration-300 ${recording ? 'text-red-500 scale-90' : 'text-foreground'}`}>
-                                                                <Mic className={`h-12 w-12 ${recording ? 'animate-pulse' : ''}`} />
+                                                            <div className={`h-40 w-40 rounded-full flex items-center justify-center bg-white shadow-2xl transition-all duration-500 border border-slate-100 ${recording ? 'scale-90 shadow-blue-200/50' : ''}`}>
+                                                                <Mic className={`h-16 w-16 text-slate-200 transition-colors ${recording ? 'animate-pulse text-blue-600' : ''}`} />
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex flex-col items-center gap-4">
+                                                        <div className="flex flex-col items-center gap-8">
                                                             {!recording ? (
-                                                                <button onClick={startRecording} className="btn-primary h-14 px-10 gap-3 group">
-                                                                    <Mic className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                                                    <span>Start Recording</span>
+                                                                <button onClick={startRecording} className="w-72 h-16 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-sm hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3">
+                                                                    <Mic className="h-5 w-5" />
+                                                                    Start Rec
                                                                 </button>
                                                             ) : (
-                                                                <button onClick={stopRecording} className="inline-flex items-center justify-center rounded-xl bg-red-600 px-10 h-14 text-base font-bold text-white transition-all shadow-lg shadow-red-500/20 active:scale-95 gap-3">
+                                                                <button onClick={stopRecording} className="w-72 h-16 bg-red-600 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-sm hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3">
                                                                     <Square className="h-5 w-5 fill-current" />
-                                                                    <span>Stop & Review</span>
+                                                                    Terminate
                                                                 </button>
                                                             )}
 
                                                             {!recording && !audioBlob && (
                                                                 <button
                                                                     onClick={() => setManualInput(true)}
-                                                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest mt-2"
+                                                                    className="text-xs font-mono text-slate-300 uppercase tracking-[0.4em] hover:text-blue-600 transition-colors font-bold"
                                                                 >
-                                                                    <Keyboard className="h-4 w-4" />
-                                                                    Prefer typing?
+                                                                    Manual Entry Mode
                                                                 </button>
                                                             )}
                                                         </div>
@@ -270,45 +298,45 @@ export default function InterviewPage() {
                                                             <motion.div
                                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                                 animate={{ opacity: 1, scale: 1 }}
-                                                                className="w-full max-w-md bg-muted/40 p-6 rounded-2xl border border-border"
+                                                                className="w-full max-w-md p-10 bg-slate-50 rounded-[32px] border border-slate-100"
                                                             >
-                                                                <div className="flex items-center gap-4 mb-6">
-                                                                    <audio src={URL.createObjectURL(audioBlob)} controls className="flex-1 h-9" />
-                                                                    <button onClick={() => setAudioBlob(null)} className="h-9 w-9 flex items-center justify-center bg-white rounded-lg border border-border hover:text-red-500 transition-colors">
-                                                                        <RefreshCcw className="h-4 w-4" />
+                                                                <div className="flex items-center gap-6 mb-10">
+                                                                    <audio src={URL.createObjectURL(audioBlob)} controls className="flex-1 h-12 opacity-80" />
+                                                                    <button onClick={() => setAudioBlob(null)} className="h-12 w-12 flex items-center justify-center bg-white rounded-2xl border border-slate-200 hover:text-red-500 transition-colors shadow-sm">
+                                                                        <RefreshCcw className="h-5 w-5" />
                                                                     </button>
                                                                 </div>
                                                                 <button
                                                                     onClick={submitAnswer}
                                                                     disabled={submitting}
-                                                                    className="btn-primary w-full h-12 gap-2"
+                                                                    className="w-full h-16 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-4 shadow-2xl disabled:opacity-30"
                                                                 >
                                                                     {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
-                                                                    {submitting ? 'Analyzing Responses...' : 'Submit to AI Officer'}
+                                                                    {submitting ? 'Synthesizing...' : 'Analyze Vector'}
                                                                 </button>
                                                             </motion.div>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <div className="space-y-6 text-left">
-                                                        <div className="space-y-2">
-                                                            <label className="text-sm font-bold text-muted-foreground uppercase tracking-widest px-2">Written Response</label>
+                                                    <div className="space-y-10 text-left">
+                                                        <div className="space-y-4">
+                                                            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.4em] ml-4 font-bold">Transcription Input</label>
                                                             <textarea
-                                                                className="w-full p-6 md:p-8 rounded-3xl border border-border bg-muted/20 focus:bg-white focus:border-foreground focus:ring-4 focus:ring-muted transition-all outline-none min-h-[200px] text-lg font-medium leading-relaxed"
-                                                                placeholder="Please provide your detailed answer here..."
+                                                                className="w-full p-12 rounded-[40px] border border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-500/30 transition-all outline-none min-h-[300px] text-2xl font-light leading-relaxed text-slate-900 placeholder:text-slate-200 shadow-inner"
+                                                                placeholder="Type your response for neural analysis..."
                                                                 value={transcript}
                                                                 onChange={(e) => setTranscript(e.target.value)}
                                                             />
                                                         </div>
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-6">
                                                             <button
                                                                 onClick={submitAnswer}
                                                                 disabled={submitting || !transcript}
-                                                                className="btn-primary flex-1 h-14 text-lg gap-2"
+                                                                className="flex-1 h-20 bg-slate-900 text-white rounded-3xl font-bold uppercase tracking-[0.2em] text-sm hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 shadow-2xl"
                                                             >
-                                                                {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Submit Answer"}
+                                                                {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Initiate Analysis"}
                                                             </button>
-                                                            <button onClick={() => { setManualInput(false); setTranscript(""); }} className="h-14 w-14 flex items-center justify-center bg-muted/50 rounded-2xl hover:bg-muted transition-colors border border-border">
+                                                            <button onClick={() => { setManualInput(false); setTranscript(""); }} className="h-20 w-20 flex items-center justify-center bg-white border border-slate-100 rounded-3xl hover:text-blue-600 transition-all shadow-lg">
                                                                 <Mic className="h-6 w-6" />
                                                             </button>
                                                         </div>
@@ -319,33 +347,34 @@ export default function InterviewPage() {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                className="space-y-8"
+                                                className="space-y-12"
                                             >
-                                                <div className="minimal-card p-0 bg-white border-foreground/5 shadow-2xl relative overflow-hidden text-left">
-                                                    <div className="absolute top-0 right-0 p-8">
-                                                        <div className="h-20 w-20 rounded-full border-4 border-muted flex flex-col items-center justify-center bg-white shadow-xl">
-                                                            <span className="text-2xl font-black text-foreground">{lastFeedback.singleAnalysis?.score || 0}</span>
-                                                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em]">Score</span>
+                                                <div className="bg-slate-50 border border-slate-100 rounded-[48px] overflow-hidden text-left relative shadow-inner">
+                                                    <div className="absolute top-10 right-10">
+                                                        <div className="h-24 w-24 rounded-full border border-blue-500/10 flex flex-col items-center justify-center bg-white shadow-xl">
+                                                            <span className="text-4xl font-light text-slate-900 tracking-tighter leading-none">{lastFeedback.singleAnalysis?.score || 0}</span>
+                                                            <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest mt-2 font-bold">Rating</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="p-8 border-b border-border bg-muted/20">
-                                                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Assessment Complete</h3>
-                                                        <p className="text-2xl font-black text-foreground">Initial Evaluation</p>
+                                                    <div className="p-12 border-b border-slate-100 bg-white">
+                                                        <h3 className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.4em] mb-4 font-bold">Calibration Segment</h3>
+                                                        <p className="text-3xl font-light tracking-tighter text-slate-900 italic font-serif">Evaluation Matrix</p>
                                                     </div>
 
-                                                    <div className="p-8 space-y-6">
+                                                    <div className="p-12 space-y-12">
                                                         <div>
-                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-2 px-1">Transcript Review</p>
-                                                            <div className="p-4 bg-muted/30 rounded-2xl border border-border italic text-muted-foreground text-sm">
+                                                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] mb-6 font-bold">Ingested Data</p>
+                                                            <div className="p-8 bg-white rounded-3xl border border-slate-100 text-slate-500 italic text-xl font-light leading-relaxed font-serif">
                                                                 "{lastFeedback.answerText}"
                                                             </div>
                                                         </div>
 
                                                         <div>
-                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-2 px-1">Officer Data</p>
-                                                            <div className="p-5 bg-foreground text-background rounded-2xl shadow-lg">
-                                                                <p className="font-bold leading-relaxed">
+                                                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] mb-6 font-bold">Neural Insight</p>
+                                                            <div className="p-10 bg-blue-50 border border-blue-100 text-slate-900 rounded-[32px] shadow-lg relative overflow-hidden">
+                                                                <ShieldCheck className="absolute -bottom-6 -right-6 h-32 w-32 opacity-[0.05] text-blue-900" />
+                                                                <p className="font-light text-2xl tracking-tight leading-relaxed italic font-serif text-blue-900">
                                                                     {lastFeedback.singleAnalysis?.feedback || "Responses have been logged and processed for final review."}
                                                                 </p>
                                                             </div>
@@ -355,9 +384,9 @@ export default function InterviewPage() {
 
                                                 <button
                                                     onClick={nextQuestion}
-                                                    className="btn-primary w-full h-14 text-lg gap-2 shadow-xl shadow-foreground/10 group"
+                                                    className="w-full h-20 bg-slate-900 text-white rounded-full font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-4 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all group shadow-2xl"
                                                 >
-                                                    <span>{currentQuestionIndex === QUESTIONS.length - 1 ? 'Generate Final Report' : 'Next Question'}</span>
+                                                    <span>{currentQuestionIndex === QUESTIONS.length - 1 ? 'Execute Synthesis' : 'Proceed to Next Vector'}</span>
                                                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                                 </button>
                                             </motion.div>
@@ -367,68 +396,68 @@ export default function InterviewPage() {
                             </motion.div>
                         </div>
                     ) : (
-                        <div className="max-w-3xl mx-auto space-y-8">
+                        <div className="max-w-4xl mx-auto space-y-16">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="minimal-card p-12 text-center bg-white border-foreground/5 shadow-2xl"
+                                className="p-24 bg-white rounded-[72px] shadow-[0_40px_120px_rgba(0,0,0,0.5)] text-center relative overflow-hidden border border-white/10"
                             >
-                                <div className="h-24 w-24 bg-foreground rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl rotate-12">
-                                    <CheckCircle2 className="h-12 w-12 text-background" />
+                                <div className="absolute top-0 left-0 w-full h-[8px] bg-gradient-to-r from-emerald-400/20 via-emerald-500/40 to-emerald-400/20" />
+                                <div className="h-32 w-32 bg-slate-900 rounded-[32px] flex items-center justify-center mx-auto mb-16 shadow-2xl rotate-12">
+                                    <CheckCircle2 className="h-16 w-16 text-white" />
                                 </div>
-                                <h2 className="text-4xl font-extrabold text-foreground mb-4">Interview Concluded</h2>
-                                <p className="text-muted-foreground text-lg max-w-md mx-auto mb-10">Our AI Verifier is compiling your responses and generating a multidimensional credibility report.</p>
+                                <h2 className="text-6xl font-light tracking-tighter text-slate-900 mb-8 italic font-serif">Concluded.</h2>
+                                <p className="text-slate-400 text-xl font-light max-w-lg mx-auto mb-20 leading-relaxed font-serif">The AI Verifier is compiling your neural responses into a multidimensional credibility report.</p>
 
                                 {result ? (
                                     <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
+                                        initial={{ opacity: 0, y: 30 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="space-y-8 text-left"
+                                        className="space-y-12 text-left"
                                     >
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="minimal-card p-8 bg-muted/20">
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Academic Intent</p>
-                                                <div className="flex items-end gap-1">
-                                                    <span className="text-5xl font-black text-foreground">{result.geminiAnalysis?.academicIntentScore || 0}</span>
-                                                    <span className="text-lg font-bold text-muted-foreground mb-1">%</span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                            <div className="p-12 bg-slate-50 border border-slate-100 rounded-[48px] relative overflow-hidden shadow-inner">
+                                                <p className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.4em] mb-6 font-bold">Academic Intent</p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-8xl font-extralight tracking-tighter text-slate-900">{result.geminiAnalysis?.academicIntentScore || 0}</span>
+                                                    <span className="text-2xl font-mono text-slate-300 font-bold">%</span>
                                                 </div>
                                             </div>
-                                            <div className="minimal-card p-8 bg-foreground text-background shadow-xl">
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Overall Credibility</p>
-                                                <div className="flex items-end gap-1">
-                                                    <span className="text-5xl font-black text-background">{result.geminiAnalysis?.overallCredibilityScore || 0}</span>
-                                                    <span className="text-lg font-bold text-muted/50 mb-1">%</span>
+                                            <div className="p-12 bg-slate-900 text-white rounded-[48px] shadow-2xl relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/20 to-transparent" />
+                                                <p className="text-[10px] font-mono text-white/40 uppercase tracking-[0.4em] mb-6 font-bold relative z-10">Total Credibility</p>
+                                                <div className="flex items-baseline gap-2 relative z-10">
+                                                    <span className="text-8xl font-bold tracking-tighter">{result.geminiAnalysis?.overallCredibilityScore || 0}</span>
+                                                    <span className="text-2xl font-mono text-white/20 font-bold">%</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="minimal-card p-8 bg-white border border-border overflow-hidden relative">
-                                            <div className="absolute top-0 right-0 p-8 opacity-5">
-                                                <ShieldCheck className="h-24 w-24" />
-                                            </div>
-                                            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Executive Summary</h3>
-                                            <p className="text-lg font-medium leading-relaxed italic text-foreground border-l-4 border-foreground pl-6">
+                                        <div className="p-16 bg-blue-50 border border-blue-100 rounded-[56px] relative overflow-hidden group">
+                                            <ShieldCheck className="absolute -bottom-12 -right-12 h-56 w-56 opacity-[0.03] text-blue-900" />
+                                            <h3 className="text-[10px] font-mono text-blue-900/40 uppercase tracking-[0.4em] mb-10 font-bold">Executive Summary</h3>
+                                            <p className="text-3xl font-light leading-relaxed italic text-blue-900 border-l-4 border-blue-200 pl-12 font-serif">
                                                 "{result.geminiAnalysis?.summary || "Verification complete. Your risk profile has been updated automatically."}"
                                             </p>
                                         </div>
 
-                                        <Link href="/dashboard/student" className="btn-primary w-full h-14 text-lg">
-                                            Return to Dashboard
+                                        <Link href="/dashboard/student" className="w-full h-24 bg-slate-900 text-white rounded-full font-bold uppercase tracking-[0.3em] text-sm flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                                            Return to Interface
                                         </Link>
                                     </motion.div>
                                 ) : (
-                                    <div className="flex flex-col items-center gap-6 py-10">
-                                        <div className="flex gap-2">
+                                    <div className="flex flex-col items-center gap-12 py-20">
+                                        <div className="flex gap-6">
                                             {[0, 1, 2].map((i) => (
                                                 <motion.div
                                                     key={i}
-                                                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-                                                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-                                                    className="h-3 w-3 rounded-full bg-foreground"
+                                                    animate={{ scale: [1, 1.8, 1], opacity: [0.3, 1, 0.3] }}
+                                                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.3 }}
+                                                    className="h-4 w-4 rounded-full bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
                                                 />
                                             ))}
                                         </div>
-                                        <p className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground">Synthesizing Official Report</p>
+                                        <p className="text-[10px] font-mono uppercase tracking-[0.6em] text-slate-300 font-bold">Synthesizing Official Record</p>
                                     </div>
                                 )}
                             </motion.div>

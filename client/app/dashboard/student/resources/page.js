@@ -13,15 +13,21 @@ import {
     HeartHandshake,
     MapPin,
     ExternalLink,
-    Star,
     DollarSign,
     Clock,
     Search,
-    Filter,
-    Globe,
     Building2,
-    Users,
+    ShieldCheck
 } from 'lucide-react';
+
+const NoiseFilter = () => (
+  <svg className="pointer-events-none fixed isolate z-50 opacity-[0.02] mix-blend-soft-light w-full h-full">
+    <filter id="noiseFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+  </svg>
+);
 
 const TABS = [
     { id: 'jobs', label: 'Jobs & Opportunities', icon: Briefcase },
@@ -73,30 +79,7 @@ const MOCK_JOBS = [
         description: 'Build beautiful payment interfaces that power the internet economy.',
         tags: ['React', 'TypeScript', 'CSS'],
     },
-    {
-        title: 'Business Intelligence Analyst',
-        company: 'Amazon',
-        location: 'Seattle, WA',
-        type: 'Full-time',
-        salary: '$90,000 - $120,000',
-        posted: '4 days ago',
-        sponsorship: true,
-        description: 'Drive data-driven decisions across supply chain and logistics.',
-        tags: ['SQL', 'Excel', 'Redshift'],
-    },
-    {
-        title: 'Graduate Teaching Assistant',
-        company: 'Stanford University',
-        location: 'Palo Alto, CA',
-        type: 'Part-time',
-        salary: '$30/hr + Tuition Waiver',
-        posted: '1 day ago',
-        sponsorship: false,
-        description: 'Assist professors with CS courses while pursuing your graduate degree.',
-        tags: ['Teaching', 'CS', 'Mentoring'],
-    },
 ];
-
 
 const MOCK_NGOS = [
     {
@@ -115,30 +98,6 @@ const MOCK_NGOS = [
         description: 'Provides resettlement assistance, legal aid, ESL classes, and employment services for immigrants.',
         services: ['Legal Aid', 'Employment Support', 'Language Classes'],
     },
-    {
-        name: 'NAFSA International Educators',
-        focus: 'Student Exchange & Advocacy',
-        location: 'Washington, DC',
-        website: 'nafsa.org',
-        description: 'Advocates for international education and provides resources for students, scholars, and institutions.',
-        services: ['Policy Advocacy', 'Networking', 'Professional Development'],
-    },
-    {
-        name: 'UnidosUS',
-        focus: 'Immigration Advocacy',
-        location: 'Nationwide, USA',
-        website: 'unidosus.org',
-        description: 'Largest Latino civil rights organization providing immigration policy advocacy and community support.',
-        services: ['Immigration Aid', 'Community Programs', 'Policy Research'],
-    },
-    {
-        name: 'Immigrants Rising',
-        focus: 'Entrepreneurship & Education',
-        location: 'San Francisco, CA',
-        website: 'immigrantsrising.org',
-        description: 'Empowers undocumented students and immigrants to achieve educational and entrepreneurial goals.',
-        services: ['Scholarships', 'Legal Resources', 'Business Grants'],
-    },
 ];
 
 export default function ResourcesPage() {
@@ -155,208 +114,234 @@ export default function ResourcesPage() {
     ];
 
     return (
-        <div className="h-screen overflow-hidden bg-white flex">
-            {/* Sidebar */}
-            <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex">
-                <div className="flex items-center gap-3 mb-10 px-2">
-                    <div className="h-10 w-10 rounded-xl bg-foreground flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">E</span>
-                    </div>
-                    <span className="text-xl font-extrabold tracking-tight text-foreground">EduVerify</span>
-                </div>
+        <div className="h-screen overflow-hidden bg-[#02040A] text-white flex font-sans selection:bg-blue-500/30">
+            <NoiseFilter />
 
-                <nav className="flex-1 space-y-1">
+            {/* ════════════ BACKGROUND (FIXED) ════════════ */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div
+                    className="absolute inset-0 bg-cover bg-right bg-no-repeat opacity-40"
+                    style={{ backgroundImage: "url('/ascii-art.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
+                <div className="absolute inset-0 bg-[#206199]/20" />
+                <div
+                    className="absolute inset-0 opacity-[0.08]"
+                    style={{
+                        backgroundImage: "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+                        backgroundSize: "64px 64px",
+                    }}
+                />
+            </div>
+
+            {/* Sidebar */}
+            <aside className="w-80 bg-black/60 border-r border-white/5 p-10 flex flex-col hidden lg:flex z-10 relative backdrop-blur-xl">
+                <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+                <Link href="/" className="flex items-center gap-4 mb-16 px-2 hover:opacity-80 transition-opacity">
+                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                        <span className="text-black font-bold text-xl tracking-tighter">V</span>
+                    </div>
+                    <span className="text-2xl font-light tracking-tighter text-white">VisaAI</span>
+                </Link>
+
+                <nav className="flex-1 space-y-3">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-foreground text-white shadow-md'
-                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                className={`flex items-center gap-4 py-4 px-6 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
+                                    ? 'bg-white text-black shadow-[0_20px_50px_rgba(0,0,0,0.3)]'
+                                    : 'text-white/60 hover:text-blue-200 hover:bg-white/5 font-medium'
                                     }`}
                             >
-                                <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'}`} />
-                                <span className="font-semibold">{item.name}</span>
+                                {isActive && <motion.div layoutId="navGlow" className="absolute left-0 w-1 h-6 bg-blue-500 rounded-full" />}
+                                <item.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? 'text-black' : 'text-white/50 group-hover:text-blue-200'}`} />
+                                <span className="text-base font-medium tracking-wide">{item.name}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto">
+                <div className="mt-auto pt-10 border-t border-white/5">
                     <button
                         onClick={() => { localStorage.clear(); router.push('/login'); }}
-                        className="flex items-center gap-3 py-3 px-4 w-full rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
+                        className="flex items-center gap-4 py-4 px-6 w-full rounded-2xl text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all duration-300 font-mono text-xs font-bold uppercase tracking-widest"
                     >
                         <LogOut className="h-5 w-5" />
-                        <span className="font-semibold">Logout</span>
+                        <span>Terminate</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 p-6 md:p-10 lg:p-14 overflow-y-auto bg-accent/20">
+            <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto z-10 relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="max-w-6xl mx-auto"
+                    className="max-w-7xl mx-auto"
                 >
-                    <header className="mb-8">
-                        <h1 className="text-4xl font-extrabold text-foreground mb-2">Resources & Support</h1>
-                        <p className="text-muted-foreground">Find jobs, immigration lawyers, and NGO support to help your journey.</p>
+                    <header className="mb-20 border-b border-white/5 pb-12">
+                        <div className="text-xs font-mono font-bold text-blue-400 uppercase tracking-[0.3em] mb-4">Post-Verification Network</div>
+                        <h1 className="text-6xl font-light tracking-tighter text-white mb-2 italic font-serif leading-none">Resources</h1>
+                        <p className="text-white/80 text-xl font-light tracking-tight">System scan complete // Verified opportunities detected</p>
                     </header>
 
-                    {/* Search Bar */}
-                    <div className="mb-8">
-                        <div className="relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    {/* Search Bar (High Fidelity) */}
+                    <div className="mb-16">
+                        <div className="relative group">
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/40 group-focus-within:text-blue-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search resources..."
+                                placeholder="Search the vector network..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="input-field pl-12 h-12 text-base rounded-2xl"
+                                className="w-full h-20 pl-16 pr-8 bg-white/5 border border-white/10 rounded-[24px] focus:bg-white focus:text-slate-900 focus:border-blue-500/50 outline-none transition-all text-2xl font-light italic font-serif placeholder:text-white/30"
                             />
                         </div>
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+                    <div className="flex gap-6 mb-16 overflow-x-auto pb-4 scrollbar-hide">
                         {TABS.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                                    ? 'bg-foreground text-white shadow-md'
-                                    : 'bg-white text-muted-foreground border border-border hover:bg-accent hover:text-foreground'
+                                className={`flex items-center gap-4 px-10 py-5 rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all duration-500 whitespace-nowrap ${activeTab === tab.id
+                                    ? 'bg-white text-black shadow-2xl scale-105'
+                                    : 'bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white'
                                     }`}
                             >
-                                <tab.icon className="h-4 w-4" />
+                                <tab.icon className="h-5 w-5" />
                                 {tab.label}
                             </button>
                         ))}
                     </div>
 
-                    {/* ════════ JOBS TAB ════════ */}
-                    {activeTab === 'jobs' && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="space-y-4"
-                        >
-                            {MOCK_JOBS.filter((j) =>
-                                !searchQuery || j.title.toLowerCase().includes(searchQuery.toLowerCase()) || j.company.toLowerCase().includes(searchQuery.toLowerCase())
-                            ).map((job, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.08 }}
-                                    className="minimal-card p-6 bg-white hover:shadow-lg transition-all group"
-                                >
-                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="h-11 w-11 rounded-xl bg-accent flex items-center justify-center shrink-0">
-                                                    <Building2 className="h-5 w-5 text-foreground" />
+                    {/* Content Section */}
+                    <div className="space-y-8">
+                        {activeTab === 'jobs' && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="space-y-8"
+                            >
+                                {MOCK_JOBS.filter((j) =>
+                                    !searchQuery || j.title.toLowerCase().includes(searchQuery.toLowerCase()) || j.company.toLowerCase().includes(searchQuery.toLowerCase())
+                                ).map((job, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="p-12 bg-white rounded-[48px] shadow-[0_24px_80px_rgba(0,0,0,0.3)] hover:scale-[1.01] transition-all duration-500 group relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-blue-400/10 via-blue-500/30 to-blue-400/10" />
+                                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-12 relative z-10">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-8 mb-10">
+                                                    <div className="h-20 w-20 rounded-[24px] bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-sm group-hover:bg-blue-50 transition-colors">
+                                                        <Building2 className="h-10 w-10 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-4xl font-light tracking-tighter text-slate-900 mb-2 italic font-serif leading-none">{job.title}</h3>
+                                                        <p className="text-xs font-mono text-slate-500 uppercase tracking-[0.3em] font-bold">{job.company}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-foreground group-hover:underline underline-offset-4">{job.title}</h3>
-                                                    <p className="text-sm text-muted-foreground font-medium">{job.company}</p>
+                                                <p className="text-2xl text-slate-600 mb-10 font-light leading-relaxed max-w-3xl italic font-serif">"{job.description}"</p>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {job.tags.map((tag) => (
+                                                        <span key={tag} className="px-5 py-2 bg-slate-50 border border-slate-100 rounded-full text-xs font-mono text-slate-500 uppercase tracking-widest font-bold">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-muted-foreground mb-3 ml-14">{job.description}</p>
-                                            <div className="flex flex-wrap gap-2 ml-14">
-                                                {job.tags.map((tag) => (
-                                                    <span key={tag} className="px-2.5 py-1 bg-accent rounded-lg text-[11px] font-bold text-foreground uppercase tracking-wider">
-                                                        {tag}
-                                                    </span>
-                                                ))}
+                                            <div className="flex flex-col items-start lg:items-end gap-6 shrink-0 pt-4">
+                                                <div className="flex items-center gap-4 text-3xl font-light tracking-tighter text-slate-900 italic font-serif">
+                                                    <DollarSign className="h-6 w-6 text-blue-500" />
+                                                    {job.salary}
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-4 text-sm text-slate-500 font-mono uppercase tracking-[0.2em] font-bold">
+                                                        <MapPin className="h-5 w-5 text-slate-300" />
+                                                        {job.location}
+                                                    </div>
+                                                    <div className="flex items-center gap-4 text-sm text-slate-500 font-mono uppercase tracking-[0.2em] font-bold">
+                                                        <Clock className="h-5 w-5 text-slate-300" />
+                                                        {job.posted}
+                                                    </div>
+                                                </div>
+                                                {job.sponsorship && (
+                                                    <div className="px-6 py-2.5 bg-blue-600 text-white rounded-full text-xs font-mono uppercase tracking-[0.2em] font-bold shadow-xl">
+                                                        Verified Sponsorship
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-2 ml-14 md:ml-0 shrink-0">
-                                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                                                <DollarSign className="h-4 w-4 text-emerald-500" />
-                                                {job.salary}
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'ngos' && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="grid grid-cols-1 lg:grid-cols-2 gap-10"
+                            >
+                                {MOCK_NGOS.filter((n) =>
+                                    !searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase()) || n.focus.toLowerCase().includes(searchQuery.toLowerCase())
+                                ).map((ngo, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="p-12 bg-white rounded-[48px] shadow-[0_24px_80px_rgba(0,0,0,0.3)] relative overflow-hidden group border border-slate-50"
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50" />
+                                        <div className="flex items-start gap-8 mb-10">
+                                            <div className="h-20 w-20 rounded-[24px] bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm group-hover:bg-blue-50 transition-colors">
+                                                <HeartHandshake className="h-10 w-10 text-slate-300 group-hover:text-blue-600 transition-colors" />
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <MapPin className="h-3.5 w-3.5" />
-                                                {job.location}
+                                            <div className="flex-1">
+                                                <h3 className="text-3xl font-light tracking-tighter text-slate-900 italic font-serif leading-none mb-2">{ngo.name}</h3>
+                                                <p className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.4em] font-bold">{ngo.focus}</p>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <Clock className="h-3.5 w-3.5" />
-                                                {job.posted}
-                                            </div>
-                                            {job.sponsorship && (
-                                                <span className="px-2.5 py-1 bg-emerald-100 rounded-lg text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                                                    ✓ Visa Sponsorship
+                                        </div>
+
+                                        <p className="text-xl text-slate-500 mb-10 font-light leading-relaxed italic font-serif">"{ngo.description}"</p>
+
+                                        <div className="flex flex-wrap gap-3 mb-12">
+                                            {ngo.services.map((svc) => (
+                                                <span key={svc} className="px-5 py-2 bg-slate-50 border border-slate-100 rounded-full text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                                                    {svc}
                                                 </span>
-                                            )}
+                                            ))}
                                         </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
 
-
-                    {/* ════════ NGOs TAB ════════ */}
-                    {activeTab === 'ngos' && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-                        >
-                            {MOCK_NGOS.filter((n) =>
-                                !searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase()) || n.focus.toLowerCase().includes(searchQuery.toLowerCase())
-                            ).map((ngo, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.08 }}
-                                    className="minimal-card p-6 bg-white hover:shadow-lg transition-all"
-                                >
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-rose-100 to-orange-100 flex items-center justify-center shrink-0">
-                                            <HeartHandshake className="h-6 w-6 text-rose-600" />
+                                        <div className="flex items-center justify-between pt-10 border-t border-slate-50">
+                                            <div className="flex items-center gap-4 text-xs text-slate-300 font-mono uppercase tracking-[0.2em] font-bold">
+                                                <MapPin className="h-5 w-5 text-slate-200" />
+                                                {ngo.location}
+                                            </div>
+                                            <a
+                                                href={`https://${ngo.website}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-3 text-xs font-bold text-slate-900 uppercase tracking-[0.3em] hover:text-blue-600 transition-all font-mono"
+                                            >
+                                                Portal Interface
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
                                         </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold text-foreground">{ngo.name}</h3>
-                                            <p className="text-sm text-muted-foreground font-medium">{ngo.focus}</p>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-sm text-muted-foreground mb-4">{ngo.description}</p>
-
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        {ngo.services.map((svc) => (
-                                            <span key={svc} className="px-2.5 py-1 bg-accent rounded-lg text-[11px] font-bold text-foreground uppercase tracking-wider">
-                                                {svc}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <MapPin className="h-4 w-4" />
-                                            {ngo.location}
-                                        </div>
-                                        <a
-                                            href={`https://${ngo.website}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1.5 text-sm font-bold text-foreground hover:underline underline-offset-4"
-                                        >
-                                            <ExternalLink className="h-3.5 w-3.5" />
-                                            {ngo.website}
-                                        </a>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </div>
                 </motion.div>
             </main>
         </div>

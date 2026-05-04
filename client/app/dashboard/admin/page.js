@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     Users,
     LayoutDashboard,
@@ -12,15 +12,20 @@ import {
     Search,
     Filter,
     ChevronRight,
-    MoreVertical,
-    ArrowUpRight,
-    TrendingDown,
     TrendingUp,
     AlertCircle,
-    CheckCircle2,
     Clock,
-    Loader2
+    ShieldCheck
 } from 'lucide-react';
+
+const NoiseFilter = () => (
+  <svg className="pointer-events-none fixed isolate z-50 opacity-[0.02] mix-blend-soft-light w-full h-full">
+    <filter id="noiseFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+  </svg>
+);
 
 export default function AdminDashboard() {
     const [students, setStudents] = useState([]);
@@ -56,198 +61,201 @@ export default function AdminDashboard() {
         )
         .sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
 
-    return (
-        <div className="h-screen overflow-hidden bg-[#FDFDFF] flex">
-            {/* Sidebar */}
-            <aside className="w-72 bg-white border-r border-border p-8 flex flex-col hidden lg:flex fixed h-full">
-                <div className="flex items-center gap-3 mb-10 px-2">
-                    <div className="h-10 w-10 rounded-xl bg-foreground flex items-center justify-center shadow-lg">
-                        <span className="text-background font-bold text-xl">E</span>
-                    </div>
-                    <span className="text-xl font-extrabold tracking-tight text-foreground">EduVerify <span className="text-[10px] bg-accent px-2 py-0.5 rounded-full ml-1 text-muted-foreground uppercase tracking-widest">Admin</span></span>
-                </div>
+    if (loading) return (
+        <div className="h-screen flex items-center justify-center bg-white text-slate-900">
+            <div className="flex flex-col items-center gap-6">
+               <div className="h-16 w-16 border-t-4 border-blue-600 rounded-full animate-spin shadow-lg" />
+               <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-mono font-bold">Synchronizing Global Database...</p>
+            </div>
+        </div>
+    );
 
-                <nav className="flex-1 space-y-1">
+    return (
+        <div className="h-screen overflow-hidden bg-[#02040A] text-white flex font-sans selection:bg-blue-500/30">
+            <NoiseFilter />
+
+            {/* ════════════ BACKGROUND (FIXED) ════════════ */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div
+                    className="absolute inset-0 bg-cover bg-right bg-no-repeat opacity-40"
+                    style={{ backgroundImage: "url('/ascii-art.png')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
+                <div className="absolute inset-0 bg-[#206199]/20" />
+                <div
+                    className="absolute inset-0 opacity-[0.08]"
+                    style={{
+                        backgroundImage: "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+                        backgroundSize: "64px 64px",
+                    }}
+                />
+            </div>
+
+            {/* Sidebar */}
+            <aside className="w-80 bg-black/60 border-r border-white/5 p-10 flex flex-col hidden lg:flex z-10 relative backdrop-blur-xl">
+                <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+                
+                <Link href="/" className="flex items-center gap-4 mb-16 px-2 hover:opacity-80 transition-opacity">
+                    <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                        <span className="text-black font-bold text-xl tracking-tighter">V</span>
+                    </div>
+                    <span className="text-2xl font-light tracking-tighter text-white">VisaAI <span className="text-[10px] font-mono text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full ml-2 uppercase">Root</span></span>
+                </Link>
+
+                <nav className="flex-1 space-y-3">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-foreground text-background shadow-md'
-                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                className={`flex items-center gap-4 py-4 px-6 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
+                                    ? 'bg-white text-black shadow-[0_20px_50px_rgba(0,0,0,0.3)]'
+                                    : 'text-white/60 hover:text-blue-200 hover:bg-white/5 font-medium'
                                     }`}
                             >
-                                <item.icon className={`h-5 w-5 ${isActive ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'}`} />
-                                <span className="font-semibold">{item.name}</span>
+                                {isActive && <motion.div layoutId="navGlow" className="absolute left-0 w-1 h-6 bg-blue-500 rounded-full" />}
+                                <item.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? 'text-black' : 'text-white/50 group-hover:text-blue-200'}`} />
+                                <span className="text-base font-medium tracking-wide">{item.name}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto">
+                <div className="mt-auto pt-10 border-t border-white/5">
                     <button
                         onClick={() => { localStorage.clear(); router.push('/login'); }}
-                        className="flex items-center gap-3 py-3 px-4 w-full rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
+                        className="flex items-center gap-4 py-4 px-6 w-full rounded-2xl text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all duration-300"
                     >
                         <LogOut className="h-5 w-5" />
-                        <span className="font-semibold">Logout</span>
+                        <span className="text-xs font-mono font-bold uppercase tracking-widest">Terminate</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 lg:ml-72 p-6 md:p-10 lg:p-14">
+            <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto z-10 relative">
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="max-w-7xl mx-auto"
                 >
-                    <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-8">
                         <div>
-                            <h1 className="text-4xl font-extrabold text-foreground mb-2">Student Applications</h1>
-                            <p className="text-muted-foreground">Manage and review incoming international student verifications.</p>
+                            <div className="text-xs font-mono font-bold text-blue-400 uppercase tracking-[0.3em] mb-2">Omniscience Protocol</div>
+                            <h1 className="text-5xl font-light tracking-tighter text-white mb-2 italic font-serif leading-none">Command</h1>
+                            <p className="text-white/80 text-xl font-light tracking-tight leading-relaxed">Neural surveillance active // Real-time vector monitoring</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <div className="flex items-center gap-4">
+                            <div className="relative group">
+                                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40 group-focus-within:text-blue-500 transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Search students..."
-                                    className="input-field pl-10 h-11 w-64 md:w-80"
+                                    placeholder="Search by Identity or Passport..."
+                                    className="h-14 pl-14 pr-8 bg-white/5 border border-white/10 rounded-2xl focus:border-blue-500/50 focus:bg-white focus:text-slate-900 outline-none transition-all w-64 md:w-[480px] text-lg font-light placeholder:text-white/30"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <button className="h-11 px-4 border border-border rounded-xl hover:bg-muted transition-colors">
-                                <Filter className="h-4 w-4" />
+                            <button className="h-14 w-14 flex items-center justify-center border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-white/20 hover:text-white">
+                                <Filter className="h-5 w-5" />
                             </button>
                         </div>
                     </header>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div className="minimal-card p-6 bg-white overflow-hidden relative">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-green-50 text-green-600 rounded-lg">
-                                    <TrendingUp className="h-5 w-5" />
-                                </div>
-                                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-widest">+12%</span>
-                            </div>
-                            <p className="text-2xl font-black text-foreground">{students.length}</p>
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Total Applicants</p>
-                            <div className="absolute -bottom-4 -right-4 opacity-5">
-                                <Users className="h-24 w-24" />
-                            </div>
-                        </div>
-                        <div className="minimal-card p-6 bg-white">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
-                                    <Clock className="h-5 w-5" />
-                                </div>
-                            </div>
-                            <p className="text-2xl font-black text-foreground">
-                                {students.filter(s => s.applicationStatus === 'Pending').length}
-                            </p>
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Pending Review</p>
-                        </div>
-                        <div className="minimal-card p-6 bg-white">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-red-50 text-red-600 rounded-lg">
-                                    <AlertCircle className="h-5 w-5" />
-                                </div>
-                            </div>
-                            <p className="text-2xl font-black text-foreground">
-                                {students.filter(s => s.riskLevel === 'High').length}
-                            </p>
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">High Risk Profiles</p>
-                        </div>
+                    {/* Stats Section (Converted to White Cards) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                        {[
+                          { label: "Active Nodes", value: students.length, icon: TrendingUp, color: "blue", trend: "+ Neural Growth" },
+                          { label: "Awaiting Sync", value: students.filter(s => s.applicationStatus === 'Pending').length, icon: Clock, color: "amber", trend: "Calibration Req" },
+                          { label: "Anomalies", value: students.filter(s => s.riskLevel === 'High').length, icon: AlertCircle, color: "red", trend: "Deep Scan Alert" }
+                        ].map((stat, i) => (
+                          <div key={i} className="p-10 bg-white rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group border border-white/10">
+                              <stat.icon className="absolute -bottom-4 -right-4 h-24 w-24 opacity-[0.03] text-black group-hover:opacity-[0.08] transition-opacity" />
+                              <div className="flex justify-between items-start mb-10">
+                                  <div className={`h-12 w-12 bg-${stat.color}-50 text-${stat.color}-600 rounded-2xl flex items-center justify-center`}>
+                                      <stat.icon className="h-6 w-6" />
+                                  </div>
+                                  <span className={`text-xs font-mono text-${stat.color}-600 bg-${stat.color}-50 px-3 py-1.5 rounded-full uppercase tracking-[0.2em] font-bold`}>{stat.trend}</span>
+                              </div>
+                              <p className="text-6xl font-extralight tracking-tighter text-slate-900">{stat.value}</p>
+                              <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em] mt-4">{stat.label}</p>
+                          </div>
+                        ))}
                     </div>
 
-                    <div className="minimal-card bg-white overflow-hidden border-border/60 shadow-sm">
-                        {loading ? (
-                            <div className="p-20 flex flex-col items-center justify-center gap-4">
-                                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">Synchronizing Database</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b border-border bg-muted/30">
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider">Student Profile</th>
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider">Passport ID</th>
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider">Credibility</th>
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider">Risk Assessment</th>
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider">Decision</th>
-                                            <th className="py-5 px-6 text-xs font-black text-muted-foreground uppercase tracking-wider"></th>
+                    {/* Table Section (White) */}
+                    <div className="bg-white rounded-[48px] shadow-[0_32px_100px_rgba(0,0,0,0.4)] overflow-hidden border border-white/10">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-100">
+                                        <th className="py-8 px-12 text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Subject Profile</th>
+                                        <th className="py-8 px-12 text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Identity Vector</th>
+                                        <th className="py-8 px-12 text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Integrity</th>
+                                        <th className="py-8 px-12 text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Inertia</th>
+                                        <th className="py-8 px-12 text-xs font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Status</th>
+                                        <th className="py-8 px-12"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {filteredStudents.map((student) => (
+                                        <tr key={student._id} className="group hover:bg-blue-50/50 transition-all duration-300">
+                                            <td className="py-8 px-12">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 border border-slate-200 uppercase text-lg italic font-serif">
+                                                        {student.user?.name?.charAt(0)}
+                                                    </div>
+                                                    <span className="text-xl font-light tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">{student.user?.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-8 px-12 text-base font-mono text-slate-500 font-bold uppercase tracking-widest">{student.passportNumber || 'NULL_VECTOR'}</td>
+                                            <td className="py-8 px-12">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-lg font-mono text-slate-900 font-bold">{student.finalScore || 0}%</span>
+                                                    <div className="w-24 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-1000 ${student.finalScore > 70 ? 'bg-emerald-500' : student.finalScore > 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${student.finalScore || 0}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-8 px-12">
+                                                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono uppercase tracking-[0.2em] font-bold ${student.riskLevel === 'High' ? 'text-red-600 bg-red-50' : student.riskLevel === 'Low' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`}>
+                                                    <div className={`h-1.5 w-1.5 rounded-full ${student.riskLevel === 'High' ? 'bg-red-600 animate-pulse' : student.riskLevel === 'Low' ? 'bg-emerald-600' : 'bg-amber-600'}`} />
+                                                    {student.riskLevel || 'PENDING'}
+                                                </span>
+                                            </td>
+                                            <td className="py-8 px-12">
+                                                <span className={`text-xs font-mono uppercase tracking-[0.2em] font-bold ${student.applicationStatus === 'Approved' ? 'text-emerald-600' : student.applicationStatus === 'Rejected' ? 'text-red-600' : 'text-slate-400'}`}>
+                                                    {student.applicationStatus}
+                                                </span>
+                                            </td>
+                                            <td className="py-8 px-12 text-right">
+                                                <Link
+                                                    href={`/dashboard/admin/student/${student._id}`}
+                                                    className="inline-flex items-center gap-3 text-xs font-mono uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-all group/btn font-bold"
+                                                >
+                                                    Audit Sequence
+                                                    <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Link>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50">
-                                        {filteredStudents.map((student) => (
-                                            <tr key={student._id} className="group hover:bg-muted/30 transition-all duration-200">
-                                                <td className="py-5 px-6">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center font-bold text-foreground overflow-hidden border border-border uppercase">
-                                                            {student.user?.name?.charAt(0)}
-                                                        </div>
-                                                        <span className="font-bold text-foreground">{student.user?.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-5 px-6 text-sm font-medium text-muted-foreground font-mono">{student.passportNumber || 'N/A'}</td>
-                                                <td className="py-5 px-6">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-black text-foreground">{student.finalScore || 0}%</span>
-                                                        <div className="w-16 h-1 w-full bg-muted rounded-full overflow-hidden">
-                                                            <div
-                                                                className={`h-full rounded-full transition-all duration-1000 ${student.finalScore > 70 ? 'bg-green-500' : student.finalScore > 40 ? 'bg-amber-500' : 'bg-red-500'
-                                                                    }`}
-                                                                style={{ width: `${student.finalScore || 0}%` }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="py-5 px-6">
-                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${student.riskLevel === 'High' ? 'bg-red-50 text-red-600 border border-red-100' :
-                                                            student.riskLevel === 'Low' ? 'bg-green-50 text-green-600 border border-green-100' :
-                                                                'bg-amber-50 text-amber-600 border border-amber-100'
-                                                        }`}>
-                                                        <div className={`h-1.5 w-1.5 rounded-full ${student.riskLevel === 'High' ? 'bg-red-600 animate-pulse' :
-                                                                student.riskLevel === 'Low' ? 'bg-green-600' : 'bg-amber-600'
-                                                            }`} />
-                                                        {student.riskLevel || 'TBD'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-5 px-6">
-                                                    <span className={`inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${student.applicationStatus === 'Approved' ? 'bg-foreground text-background shadow-lg shadow-foreground/5' :
-                                                            student.applicationStatus === 'Rejected' ? 'bg-muted text-muted-foreground' :
-                                                                'bg-white border border-border text-foreground'
-                                                        }`}>
-                                                        {student.applicationStatus}
-                                                    </span>
-                                                </td>
-                                                <td className="py-5 px-6 text-right">
-                                                    <Link
-                                                        href={`/dashboard/admin/student/${student._id}`}
-                                                        className="inline-flex items-center gap-2 text-xs font-bold text-foreground hover:bg-accent px-4 py-2 rounded-xl transition-all border border-transparent hover:border-border group/btn"
-                                                    >
-                                                        Review Details
-                                                        <ChevronRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {filteredStudents.length === 0 && (
-                                            <tr>
-                                                <td colSpan="6" className="py-20 text-center">
-                                                    <p className="text-muted-foreground font-bold italic">No matching applications found.</p>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                    ))}
+                                    {filteredStudents.length === 0 && (
+                                        <tr>
+                                            <td colSpan="6" className="py-40 text-center">
+                                                <div className="flex flex-col items-center gap-6">
+                                                    <ShieldCheck className="h-12 w-12 text-slate-100" />
+                                                    <p className="text-slate-300 font-mono text-xs uppercase tracking-[0.4em]">Zero Subjects detected in current matrix segment.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </motion.div>
             </main>
