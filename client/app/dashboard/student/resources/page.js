@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -17,8 +17,12 @@ import {
     Clock,
     Search,
     Building2,
-    ShieldCheck
+    ShieldCheck,
+    AlertTriangle,
+    ShieldAlert,
+    History
 } from 'lucide-react';
+import api from '../../../../lib/api';
 
 const NoiseFilter = () => (
   <svg className="pointer-events-none fixed isolate z-50 opacity-[0.02] mix-blend-soft-light w-full h-full">
@@ -30,6 +34,7 @@ const NoiseFilter = () => (
 );
 
 const TABS = [
+    { id: 'global', label: 'Global Record', icon: ShieldCheck },
     { id: 'jobs', label: 'Jobs & Opportunities', icon: Briefcase },
     { id: 'ngos', label: 'NGOs & Support', icon: HeartHandshake },
 ];
@@ -101,10 +106,26 @@ const MOCK_NGOS = [
 ];
 
 export default function ResourcesPage() {
-    const [activeTab, setActiveTab] = useState('jobs');
+    const [activeTab, setActiveTab] = useState('global');
     const [searchQuery, setSearchQuery] = useState('');
+    const [backgroundData, setBackgroundData] = useState(null);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
+
+    useEffect(() => {
+        const fetchBackground = async () => {
+            try {
+                const { data } = await api.get('/student/profile');
+                setBackgroundData(data.background);
+            } catch (err) {
+                console.error('Failed to fetch background data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBackground();
+    }, []);
 
     const navItems = [
         { name: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
@@ -221,6 +242,73 @@ export default function ResourcesPage() {
 
                     {/* Content Section */}
                     <div className="space-y-8">
+                        {activeTab === 'global' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-10"
+                            >
+                                <div className="p-16 bg-white rounded-[48px] shadow-[0_32px_100px_rgba(0,0,0,0.4)] relative overflow-hidden group">
+                                    <div className="absolute top-0 left-0 w-full h-[8px] bg-gradient-to-r from-blue-400/10 via-blue-500/40 to-blue-400/10" />
+                                    <div className="flex flex-col md:flex-row items-center gap-16 relative z-10">
+                                        <div className="relative">
+                                            <div className="h-40 w-40 rounded-[48px] bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+                                                <ShieldCheck className={`h-20 w-20 ${backgroundData?.status === 'Clear' ? 'text-emerald-500' : backgroundData?.status === 'Flagged' ? 'text-red-500' : 'text-slate-200'}`} />
+                                            </div>
+                                            {backgroundData?.status === 'Flagged' && (
+                                                <div className="absolute -top-4 -right-4 h-12 w-12 bg-red-500 rounded-full flex items-center justify-center border-4 border-white shadow-xl animate-pulse">
+                                                    <AlertTriangle className="h-6 w-6 text-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 text-center md:text-left">
+                                            <h2 className="text-5xl font-light tracking-tighter text-slate-900 mb-4 italic font-serif">
+                                                {backgroundData ? (backgroundData.status === 'Clear' ? 'Verified Clearance' : 'Security Flag Detected') : 'Neural Scan Pending'}
+                                            </h2>
+                                            <p className="text-slate-400 text-xl font-light mb-10 max-w-xl leading-relaxed italic font-serif">
+                                                Global identity validation system cross-referencing INTERPOL, OSINT news cycles, and international sanctions databases.
+                                            </p>
+                                            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+                                                <span className={`px-8 py-3 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.3em] border ${backgroundData?.status === 'Clear' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : backgroundData?.status === 'Flagged' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>
+                                                    {backgroundData?.status || 'STANDBY'}
+                                                </span>
+                                                <span className="px-8 py-3 rounded-full text-[10px] font-mono font-bold uppercase tracking-[0.3em] bg-slate-50 text-slate-400 border border-slate-100">
+                                                    INTEGRITY LEVEL: {backgroundData?.riskScore || 0}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {backgroundData?.flags?.length > 0 && (
+                                    <div className="p-16 bg-red-50 border border-red-100 rounded-[64px] relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
+                                            <ShieldAlert className="h-40 w-40 text-red-900" />
+                                        </div>
+                                        <h3 className="text-[10px] font-mono uppercase tracking-[0.5em] text-red-600 mb-12 font-bold flex items-center gap-4">
+                                            <History className="h-6 w-6" />
+                                            Active Security Anomalies
+                                        </h3>
+                                        <div className="space-y-6">
+                                            {backgroundData.flags.map((flag, i) => (
+                                                <div key={i} className="flex items-start gap-8 p-10 rounded-[40px] bg-white border border-red-100 shadow-sm group hover:scale-[1.01] transition-transform">
+                                                    <div className="h-3 w-3 rounded-full bg-red-500 mt-3 shrink-0 animate-pulse" />
+                                                    <p className="text-2xl font-light text-red-900/80 leading-relaxed font-serif italic">"{flag}"</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!backgroundData && !loading && (
+                                    <div className="p-24 text-center bg-white rounded-[48px] border-2 border-dashed border-slate-100">
+                                        <p className="text-2xl font-light text-slate-300 italic font-serif">
+                                            Please upload your Passport in the "Ingest Data" section to initialize your global record scan.
+                                        </p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
                         {activeTab === 'jobs' && (
                             <motion.div
                                 initial={{ opacity: 0 }}

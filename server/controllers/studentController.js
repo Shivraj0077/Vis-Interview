@@ -148,6 +148,18 @@ const uploadDocument = asyncHandler(async (req, res) => {
             student.backgroundHits = check.hits;
             student.backgroundScore = check.score;
             allBackgroundHits.push(...check.hits);
+
+            // Update or create BackgroundCheck record for the dashboard
+            await BackgroundCheck.findOneAndUpdate(
+                { student: student._id },
+                {
+                    riskScore: check.score,
+                    flags: check.hits.map(h => `${h.source}: ${h.description}`),
+                    status: check.hits.length > 0 ? 'Flagged' : 'Clear',
+                    completedAt: new Date()
+                },
+                { upsert: true, new: true }
+            );
         }
     }
 
