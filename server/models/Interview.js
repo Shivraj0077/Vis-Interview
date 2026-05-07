@@ -7,6 +7,7 @@ const interviewSchema = new mongoose.Schema({
         question: String,
         answerAudioPath: String,
         answerText: String,
+        evaluation: { type: Object }, // per-answer AI evaluation
     }],
     currentPhase: { type: Number, default: 1 }, // 1 to 5
     geminiAnalysis: { type: Object }, // Higher fidelity storage for evaluation

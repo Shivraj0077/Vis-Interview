@@ -13,6 +13,23 @@ async function getAI() {
     return aiInstance;
 }
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const callWithRetry = async (fn, retries = 3, delay = 2000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (error.status === 429 && i < retries - 1) {
+                console.warn(`Gemini Rate Limit hit. Retrying in ${delay}ms...`);
+                await sleep(delay * (i + 1));
+                continue;
+            }
+            throw error;
+        }
+    }
+};
+
 /**
  * Transcribe audio using ElevenLabs Scribe API (External STT Provider)
  */
@@ -178,6 +195,50 @@ const analyzeSingleAnswer = async (question, answer) => {
 };
 
 /**
+ * Optimized combined identification and parsing
+ */
+const identifyAndParseDocument = async (rawText, suggestedType = 'Auto') => {
+    try {
+        const prompt = `
+      Analyze this US visa-related document OCR text.
+      1. Identify the document type: 'Passport', 'I-20', 'Bank Statement', 'Offer Letter', 'Statement of Purpose', 'Passport Photo', 'Resume', 'DS-160'.
+      2. Extract fields based on type:
+         - I-20: studentName, sevisID, programStartDate, programEndDate, schoolName, pdsoName, estimatedCost (number), fieldOfStudy
+         - Passport: fullName, dob, nationality, issueDate, expiryDate, mrzLine
+         - Bank Statement: accountHolderName, accountNumber, currentBalance (number), currency, threeMonthAverage (number)
+         - Offer Letter: universityName, programName, intakeSemester, scholarshipAmount (number), studentName
+         - SOP: careerGoal, programMentioned, homeCountryPlan, universityMentioned
+         - Resume: fullName, education, workExperience, skills
+         - DS-160: applicationNumber, fullName, purposeOfTrip, addressInUS
+      
+      Suggested Type (if not Auto): ${suggestedType}
+      OCR Text: "${rawText}"
+
+      Return ONLY JSON:
+      {
+        "type": "string",
+        "extractedData": { ... }
+      }
+    `;
+
+        return await callWithRetry(async () => {
+            const ai = await getAI();
+            const response = await ai.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: prompt
+            });
+            const text = response.text.trim();
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) return JSON.parse(jsonMatch[0]);
+            return { type: 'Unknown', extractedData: {} };
+        });
+    } catch (error) {
+        console.error('Gemini ID+Parse Error:', error);
+        return { type: 'Unknown', extractedData: {} };
+    }
+};
+
+/**
  * Structured document parsing using Gemini 3 Flash Preview
  */
 const parseDocument = async (rawText, docType) => {
@@ -187,11 +248,12 @@ const parseDocument = async (rawText, docType) => {
       If a field is not found, use null.
       
       FIELDS TO EXTRACT PER DOCUMENT TYPE:
-      - Form I-20: studentName, sevisID, programStartDate, programEndDate, schoolName, pdsoName, estimatedCost (number), fieldOfStudy
+      - I-20: studentName, sevisID, programStartDate, programEndDate, schoolName, pdsoName, estimatedCost (number), fieldOfStudy
       - Passport: fullName, dob, nationality, issueDate, expiryDate, mrzLine (the bottom lines)
       - Bank Statement: accountHolderName, accountNumber, currentBalance (number), currency, threeMonthAverage (number)
       - Offer Letter: universityName, programName, intakeSemester, scholarshipAmount (number), studentName
       - SOP: careerGoal, programMentioned, homeCountryPlan, universityMentioned
+      - Resume: fullName, education, workExperience, skills
 
       Raw OCR Text:
       "${rawText}"
@@ -199,18 +261,17 @@ const parseDocument = async (rawText, docType) => {
       Return ONLY valid JSON.
     `;
 
-        const ai = await getAI();
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt
+        return await callWithRetry(async () => {
+            const ai = await getAI();
+            const response = await ai.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: prompt
+            });
+            const text = response.text.trim();
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) return JSON.parse(jsonMatch[0]);
+            throw new Error("Could not parse OCR JSON");
         });
-
-        const text = response.text.trim();
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
-        }
-        throw new Error("Could not parse OCR JSON");
     } catch (error) {
         console.error('Gemini Document Parse Error:', error);
         return {};
@@ -337,4 +398,36 @@ const analyzeHolistically = async (student, docs) => {
     }
 };
 
-module.exports = { analyzeTranscript, analyzeSingleAnswer, transcribeAudio, parseDocument, analyzeNewsHit, generateFinalRecommendations, analyzeHolistically };
+/**
+ * Identify document type from raw OCR text
+ */
+const identifyDocumentType = async (rawText) => {
+    try {
+        const prompt = `
+      Analyze the following OCR text and identify the type of US visa-related document it is.
+      The possible types are: 'Passport', 'I-20', 'Bank Statement', 'Offer Letter', 'Statement of Purpose', 'Passport Photo', 'Resume', 'DS-160'.
+      
+      OCR Text:
+      "${rawText}"
+
+      Return ONLY the document type string. If unsure, return 'Unknown'.
+    `;
+
+        const ai = await getAI();
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: prompt
+        });
+
+        let type = response.text.trim();
+        // Clean up any extra text or quotes
+        const validTypes = ['Passport', 'I-20', 'Bank Statement', 'Offer Letter', 'Statement of Purpose', 'Passport Photo', 'Resume', 'DS-160'];
+        const found = validTypes.find(t => type.includes(t));
+        return found || 'Unknown';
+    } catch (error) {
+        console.error('Gemini Document Identification Error:', error);
+        return 'Unknown';
+    }
+};
+
+module.exports = { analyzeTranscript, analyzeSingleAnswer, transcribeAudio, parseDocument, analyzeNewsHit, generateFinalRecommendations, analyzeHolistically, identifyDocumentType, identifyAndParseDocument };

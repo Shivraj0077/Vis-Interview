@@ -133,7 +133,7 @@ export default function LandingPage() {
               }
             ].map((feature, i) => (
               <div
-                key={i}a
+                key={i}
                 className="p-10 bg-white shadow-xl rounded-[32px] border border-white/10 hover:scale-[1.02] transition-all duration-500"
               >
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-8 text-slate-400">

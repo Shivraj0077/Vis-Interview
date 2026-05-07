@@ -28,15 +28,11 @@ const NoiseFilter = () => (
   </svg>
 );
 
-const QUESTIONS = [
-    "Why do you want to study in the United States?",
-    "Why have you chosen this specific course/major?",
-    "How will you fund your education expenses?",
-    "What are your career plans after graduation?"
-];
+const TOTAL_QUESTIONS = 7;
 
 export default function InterviewPage() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [currentQuestion, setCurrentQuestion] = useState("Initializing neural link...");
     const [recording, setRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -47,6 +43,19 @@ export default function InterviewPage() {
     const [transcript, setTranscript] = useState("");
     const router = useRouter();
     const pathname = usePathname();
+
+    useEffect(() => {
+        const fetchFirstQuestion = async () => {
+            try {
+                const { data } = await api.get('/student/interview/next');
+                setCurrentQuestion(data.nextQuestion || "Why do you want to study in the United States?");
+            } catch (err) {
+                console.error("Failed to fetch initial question", err);
+                setCurrentQuestion("Why do you want to study in the United States?");
+            }
+        };
+        fetchFirstQuestion();
+    }, []);
 
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
@@ -96,7 +105,7 @@ export default function InterviewPage() {
     const submitAnswer = async () => {
         const formData = new FormData();
         formData.append('questionIndex', currentQuestionIndex);
-        formData.append('questionText', QUESTIONS[currentQuestionIndex]);
+        formData.append('questionText', currentQuestion);
 
         if (manualInput) {
             if (!transcript) return;
@@ -120,9 +129,10 @@ export default function InterviewPage() {
         }
     };
 
-    const nextQuestion = () => {
-        if (currentQuestionIndex < QUESTIONS.length - 1) {
+    const nextQuestionAction = () => {
+        if (!lastFeedback?.isCompleted && currentQuestionIndex < TOTAL_QUESTIONS - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
+            setCurrentQuestion(lastFeedback?.nextQuestion?.nextQuestion || "Can you elaborate?");
             setAudioBlob(null);
             setTranscript("");
             setLastFeedback(null);
@@ -137,7 +147,10 @@ export default function InterviewPage() {
         try {
             const { data } = await api.get('/student/profile');
             if (data.interview?.status === 'Completed') {
-                setResult(data.interview);
+                setResult({ 
+                    ...data.interview, 
+                    recommendations: data.student.recommendations 
+                });
             } else {
                 setTimeout(fetchAnalysis, 2000);
             }
@@ -226,7 +239,7 @@ export default function InterviewPage() {
                             <div className="flex flex-col items-end">
                                 <p className="text-xs font-mono font-bold text-white/50 uppercase tracking-[0.3em] mb-2">Sequence Tracker</p>
                                 <div className="h-12 px-6 rounded-2xl bg-white/5 border border-white/10 inline-flex items-center justify-center w-fit">
-                                    <span className="text-xl font-light text-white tracking-tighter">{currentQuestionIndex + 1} <span className="text-white/10 mx-2">/</span> {QUESTIONS.length}</span>
+                                    <span className="text-xl font-light text-white tracking-tighter">{currentQuestionIndex + 1} <span className="text-white/10 mx-2">/</span> {TOTAL_QUESTIONS}</span>
                                 </div>
                             </div>
                         )}
@@ -245,7 +258,7 @@ export default function InterviewPage() {
 
                                 <div className="max-w-3xl mx-auto relative z-10">
                                     <h2 className="text-3xl md:text-5xl font-light tracking-tighter text-slate-900 mb-12 leading-[1.1] italic font-serif">
-                                        "{QUESTIONS[currentQuestionIndex]}"
+                                        "{currentQuestion}"
                                     </h2>
 
                                     <AnimatePresence mode="wait">
@@ -383,10 +396,10 @@ export default function InterviewPage() {
                                                 </div>
 
                                                 <button
-                                                    onClick={nextQuestion}
+                                                    onClick={nextQuestionAction}
                                                     className="w-full h-20 bg-slate-900 text-white rounded-full font-bold uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-4 hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all group shadow-2xl"
                                                 >
-                                                    <span>{currentQuestionIndex === QUESTIONS.length - 1 ? 'Execute Synthesis' : 'Proceed to Next Vector'}</span>
+                                                    <span>{lastFeedback?.isCompleted || currentQuestionIndex === TOTAL_QUESTIONS - 1 ? 'Execute Synthesis' : 'Proceed to Next Vector'}</span>
                                                     <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                                 </button>
                                             </motion.div>
@@ -439,6 +452,22 @@ export default function InterviewPage() {
                                             <p className="text-3xl font-light leading-relaxed italic text-blue-900 border-l-4 border-blue-200 pl-12 font-serif">
                                                 "{result.geminiAnalysis?.summary || "Verification complete. Your risk profile has been updated automatically."}"
                                             </p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <h3 className="text-xs font-mono text-slate-400 uppercase tracking-[0.4em] px-8 font-bold">Path to Clearance</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {result.recommendations?.length > 0 ? result.recommendations.map((rec, i) => (
+                                                    <div key={i} className="p-8 bg-white border border-slate-100 rounded-[32px] flex items-start gap-5 shadow-sm hover:shadow-xl transition-all">
+                                                        <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                                                            <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                                                        </div>
+                                                        <p className="text-sm text-slate-600 font-light leading-relaxed">{rec}</p>
+                                                    </div>
+                                                )) : (
+                                                    <p className="text-sm text-slate-400 italic px-8">No specific recommendations at this time. Keep improving your documentation.</p>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <Link href="/dashboard/student" className="w-full h-24 bg-slate-900 text-white rounded-full font-bold uppercase tracking-[0.3em] text-sm flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all">

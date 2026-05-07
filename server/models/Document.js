@@ -4,7 +4,7 @@ const documentSchema = new mongoose.Schema({
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
     type: {
         type: String,
-        enum: ['Passport', 'Form I-20', 'Bank Statement', 'Offer Letter', 'Statement of Purpose', 'Passport Photo'],
+        enum: ['Passport', 'I-20', 'Bank Statement', 'Offer Letter', 'Statement of Purpose', 'Passport Photo', 'Resume', 'DS-160', 'Unknown'],
         required: true
     },
     filePath: { type: String, required: true },

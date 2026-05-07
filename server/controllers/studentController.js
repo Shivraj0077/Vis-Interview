@@ -4,7 +4,7 @@ const Document = require('../models/Document');
 const Interview = require('../models/Interview');
 const BackgroundCheck = require('../models/BackgroundCheck');
 const { extractTextFromImage, validateDocumentLogic } = require('../services/ocrService');
-const { analyzeTranscript, analyzeSingleAnswer, transcribeAudio, parseDocument, generateFinalRecommendations } = require('../services/geminiService');
+const { analyzeTranscript, analyzeSingleAnswer, transcribeAudio, parseDocument, generateFinalRecommendations, identifyDocumentType } = require('../services/geminiService');
 const { calculateFinalScore, determineRiskLevel } = require('../services/scoringService');
 const { performFullBackgroundCheck } = require('../services/backgroundService');
 const { generateNextQuestion } = require('../services/interviewService');
@@ -19,10 +19,11 @@ const runCrossDocChecks = (docs) => {
     docs.forEach(d => docMap[d.type] = d.extractedData);
 
     const passport = docMap['Passport'];
-    const i20 = docMap['Form I-20'];
+    const i20 = docMap['I-20'];
     const offerLetter = docMap['Offer Letter'];
     const bank = docMap['Bank Statement'];
     const sop = docMap['Statement of Purpose'];
+    const resume = docMap['Resume'];
 
     // 1. Identity Consistency
     if (passport && i20 && passport.fullName !== i20.studentName) {
@@ -30,6 +31,9 @@ const runCrossDocChecks = (docs) => {
     }
     if (passport && offerLetter && passport.fullName !== offerLetter.studentName) {
         flags.push("Identity Mismatch: Passport name doesn't match Offer Letter student name.");
+    }
+    if (passport && resume && resume.fullName && passport.fullName !== resume.fullName) {
+        flags.push("Identity Mismatch: Passport name doesn't match Resume name.");
     }
 
     // 2. Academic Alignment
@@ -74,16 +78,15 @@ const getStudentProfile = asyncHandler(async (req, res) => {
     res.json({ student, documents, interview, background });
 });
 
-// @desc    Upload Document
+// @desc    Upload Documents
 // @route   POST /api/student/upload
 // @access  Private
 const uploadDocument = asyncHandler(async (req, res) => {
-    const { type } = req.body;
-    const file = req.file;
+    const files = req.files;
 
-    if (!file) {
+    if (!files || files.length === 0) {
         res.status(400);
-        throw new Error('No file uploaded');
+        throw new Error('No files uploaded');
     }
 
     let student = await Student.findOne({ user: req.user._id });
@@ -91,63 +94,78 @@ const uploadDocument = asyncHandler(async (req, res) => {
         student = await Student.create({ user: req.user._id, passportNumber: 'PENDING', dob: new Date() });
     }
 
-    let extractedData = {};
-    let validationFlags = [];
-    let ocrConfidence = 100;
+    const uploadedDocs = [];
+    const allBackgroundHits = [];
+    const allCrossFlags = [];
 
-    if (file.mimetype.startsWith('image/')) {
-        const { text, confidence } = await extractTextFromImage(file.location);
-        ocrConfidence = confidence;
-        extractedData = await parseDocument(text, type);
-        validationFlags = await validateDocumentLogic(extractedData, type);
-        
-        if (confidence < 60) {
-            validationFlags.push("Low OCR Confidence: Possible document tampering or poor scan quality.");
+    for (const file of files) {
+        // Rate limit protection
+        await new Promise(r => setTimeout(r, 1000));
+        let docType = req.body.type; 
+        let extractedData = {};
+        let validationFlags = [];
+        let ocrConfidence = 100;
+
+        if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+            const { text, confidence } = await extractTextFromImage(file.location);
+            ocrConfidence = confidence;
+            
+            // Optimized combined call
+            const result = await identifyAndParseDocument(text, docType);
+            docType = result.type;
+            extractedData = result.extractedData;
+            
+            validationFlags = await validateDocumentLogic(extractedData, docType);
+            
+            if (confidence < 60) {
+                validationFlags.push("Low OCR Confidence: Possible document tampering or poor scan quality.");
+            }
+
+            if (docType === 'Passport' && extractedData.fullName) {
+                student.fullName = extractedData.fullName;
+                student.passportNumber = extractedData.passportNumber || student.passportNumber;
+                if (extractedData.dob) student.dob = new Date(extractedData.dob);
+                if (extractedData.nationality) student.nationality = extractedData.nationality;
+            } else if (docType === 'I-20' && extractedData.studentName && !student.fullName) {
+                student.fullName = extractedData.studentName;
+            }
         }
 
-        // Update Student Profile from extracted data
-        if (type === 'Passport' && extractedData.fullName) {
-            student.fullName = extractedData.fullName;
-            student.passportNumber = extractedData.passportNumber || student.passportNumber;
-            if (extractedData.dob) student.dob = new Date(extractedData.dob);
-            if (extractedData.nationality) student.nationality = extractedData.nationality;
-        } else if (type === 'Form I-20' && extractedData.studentName && !student.fullName) {
-            student.fullName = extractedData.studentName;
+        const document = await Document.create({
+            student: student._id,
+            type: docType,
+            filePath: file.location,
+            extractedData,
+            ocrConfidence,
+            validationFlags,
+            isValid: validationFlags.length === 0
+        });
+
+        uploadedDocs.push(document);
+
+        if (docType === 'Passport' && student.fullName) {
+            const check = await performFullBackgroundCheck(student);
+            student.backgroundHits = check.hits;
+            student.backgroundScore = check.score;
+            allBackgroundHits.push(...check.hits);
         }
-    }
-
-    const document = await Document.create({
-        student: student._id,
-        type,
-        filePath: file.location,
-        extractedData,
-        ocrConfidence,
-        validationFlags,
-        isValid: validationFlags.length === 0
-    });
-
-    // If Passport is uploaded, trigger background check
-    let backgroundHits = [];
-    if (type === 'Passport' && student.fullName) {
-        const check = await performFullBackgroundCheck(student);
-        student.backgroundHits = check.hits;
-        student.backgroundScore = check.score;
-        backgroundHits = check.hits;
     }
 
     const allDocs = await Document.find({ student: student._id });
     student.documentsUploaded = allDocs.length;
     
     const crossFlags = runCrossDocChecks(allDocs);
+    allCrossFlags.push(...crossFlags);
     
-    // Auto-save recommendations based on findings
-    const recommendations = [...crossFlags];
-    if (validationFlags.length > 0) recommendations.push(...validationFlags);
+    const recommendations = [...allCrossFlags];
+    uploadedDocs.forEach(d => {
+        if (d.validationFlags?.length > 0) recommendations.push(...d.validationFlags);
+    });
     student.recommendations = [...new Set([...student.recommendations, ...recommendations])];
 
     await student.save();
     
-    res.status(201).json({ document, crossFlags, backgroundHits });
+    res.status(201).json({ documents: uploadedDocs, crossFlags: allCrossFlags, backgroundHits: allBackgroundHits });
 });
 
 // @desc    Submit Individual Interview Answer
@@ -197,8 +215,8 @@ const submitAnswer = asyncHandler(async (req, res) => {
         interview.currentPhase += 1;
     }
 
-    // Complete the interview if it's the 4th question (index 3) to match frontend length
-    if (parseInt(questionIndex, 10) >= 3 || interview.questions.length >= 4) {
+    // Complete the interview if it's the 7th question (index 6) to match frontend length
+    if (parseInt(questionIndex, 10) >= 6 || interview.questions.length >= 7) {
         interview.status = 'Completed';
         const fullTranscript = interview.questions.map(q => `Q: ${q.question}\nA: ${q.answerText}`).join('\n\n');
         interview.transcript = fullTranscript;
